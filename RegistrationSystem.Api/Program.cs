@@ -15,6 +15,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+connectionString = connectionString.Replace("%DataDirectory%", Path.GetFullPath("Data"));
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
 builder.Services.AddIdentity<DbUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -32,7 +33,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromMinutes(1440);
     options.SlidingExpiration = true;
     options.LoginPath = "/api/Account/Login";
-    options.AccessDeniedPath = "/api/Account/Login";
+    options.AccessDeniedPath = "/api/Account/AccessDenied";
 });
 
 builder.Services.Configure<CookiePolicyOptions>(options =>
@@ -49,7 +50,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         options.Cookie.SameSite = SameSiteMode.None;
         options.LoginPath = "/api/Account/Login";
-        options.LogoutPath = "/api/Account/Login";
+        options.LogoutPath = "/api/Account/Logout";
     });
 
 builder.SetupLogging();

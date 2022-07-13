@@ -1,22 +1,15 @@
-
-/*
-Interface for the Refresh Token (can look different, based on your backend api)
-*/
-export interface RefreshToken {
-  id: number;
-  userId: number;
-  token: string;
-  refreshCount: number;
-  expiryDate: Date;
+export interface UserDto {
+  id: string;
+  email: string;
+  firstname: string;
+  lastname: string;
 }
 
 /*
 Interface for the Login Response (can look different, based on your backend api)
 */
-export interface LoginResponse {
-  accessToken: string;
-  refreshToken: RefreshToken;
-  tokenType: string;
+export interface LoginResponse extends UserDto {
+  
 }
 
 /*
@@ -32,10 +25,10 @@ Interface for the Register Request (can look different, based on your backend ap
 */
 export interface RegisterRequest {
   email: string;
-  username: string;
   firstname: string;
   lastname: string;
   password: string;
+  confirmPassword: string;
 }
 
 /*

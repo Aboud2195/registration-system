@@ -47,7 +47,7 @@ namespace RegistrationSystem.Api.Controllers
             var signInResult = await this.signInManager.PasswordSignInAsync(userLoginDto.Email, userLoginDto.Password, false, false);
             if (signInResult.Succeeded)
             {
-                return Ok();
+                return await this.userService.GetUserByEmailAsync(new UserEmail(userLoginDto.Email));
             }
 
             return Forbid();

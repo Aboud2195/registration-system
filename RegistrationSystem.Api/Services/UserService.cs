@@ -50,6 +50,17 @@ namespace RegistrationSystem.Api.Services
             throw new HttpException<ProblemDetails>("identity-error", "An error occured while create the identity", string.Join(Environment.NewLine, errors), System.Net.HttpStatusCode.UnprocessableEntity);
         }
 
+        public async Task<UserDto> GetUserByEmailAsync(UserEmail email)
+        {
+            var dbUser = await this.userManager.FindByEmailAsync(email.Value);
+            if (dbUser == null)
+            {
+                throw new EntityNotFoundException("User", $"User with email={email.Value} do not exists.");
+            }
+
+            return this.ToUserDto(dbUser);
+        }
+
         public async Task<DbUser> GetByIdAsyncAsync(UserId id)
         {
             var dbUser = await this.userManager.FindByIdAsync(id.Value);
