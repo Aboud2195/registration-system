@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/RegistrationSystem.Api/bin/Debug/net6.0
+/RegistrationSystem.Api/obj
+/RegistrationSystem.Api.Tests/bin/Debug/net6.0
+/RegistrationSystem.Api.Tests/obj
+/temp
+/RegistrationSystem
