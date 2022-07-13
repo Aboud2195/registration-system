@@ -4,10 +4,10 @@ using System.Runtime.Serialization;
 namespace RegistrationSystem.Api.Helpers.Exceptions
 {
     [Serializable]
-    public class InvalidEntityException : InvalidValidatableException<EntityRule>
+    public class InvalidEntityException : InvalidValidatableException<BusinessRule>
     {
-        public InvalidEntityException(Type entityType, IEnumerable<EntityRule> brokenRules)
-            : base(ProblemTypeTemplate(entityType), ProblemTitleTemplate(entityType), brokenRules)
+        public InvalidEntityException(string name, IEnumerable<BusinessRule> brokenRules)
+            : base(GetProblemTypeTemplate(name), GetProblemTitleTemplate(name), brokenRules)
         {
         }
 
@@ -16,8 +16,8 @@ namespace RegistrationSystem.Api.Helpers.Exceptions
         {
         }
 
-        private static string ProblemTypeTemplate(Type entityType) => $"{entityType.Name.Slugify()}-entity-invalid";
+        private static string GetProblemTypeTemplate(string name) => $"{name.Slugify()}-entity-invalid";
 
-        private static string ProblemTitleTemplate(Type entityType) => $"{entityType.Name} is invalid.";
+        private static string GetProblemTitleTemplate(string name) => $"{name} is invalid.";
     }
 }

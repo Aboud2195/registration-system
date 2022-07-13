@@ -1,5 +1,4 @@
-﻿using RegistrationSystem.Api.Helpers.Domain;
-using System.Net;
+﻿using System.Net;
 using System.Runtime.Serialization;
 
 namespace RegistrationSystem.Api.Helpers.Exceptions

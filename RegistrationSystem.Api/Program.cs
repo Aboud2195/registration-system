@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RegistrationSystem.Api.Data;
 using RegistrationSystem.Api.Data.Models;
-using RegistrationSystem.Api.Helpers.Logging;
+using RegistrationSystem.Api.Helpers;
 using RegistrationSystem.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);

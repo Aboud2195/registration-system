@@ -1,6 +1,4 @@
-﻿using RegistrationSystem.Api.Helpers.Validation;
-
-namespace RegistrationSystem.Api.Helpers.Domain
+﻿namespace RegistrationSystem.Api.Helpers.Domain
 {
     public abstract class RequiredValueObject : ValueObject
     {
@@ -17,7 +15,11 @@ namespace RegistrationSystem.Api.Helpers.Domain
         protected override List<ValueObjectRule> GetBrokenRules()
         {
             List<ValueObjectRule> rules = new();
-            rules.AddRange(this.value.Is().Required().Done());
+            if (this.Value.IsNullOrWhiteSpace())
+            {
+                rules.Add(new ValueObjectRule(ValueObjectRuleType.Required, $"Value is required."));
+            }
+
             return rules;
         }
 

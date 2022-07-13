@@ -1,15 +1,13 @@
-﻿using RegistrationSystem.Api.Helpers.Domain;
-using System.Net;
+﻿using System.Net;
 using System.Runtime.Serialization;
 
 namespace RegistrationSystem.Api.Helpers.Exceptions
 {
     [Serializable]
-    public class EntityNotFoundException<TEntity> : HttpException<ProblemDetails>
-        where TEntity : IEntity
+    public class EntityNotFoundException : HttpException<ProblemDetails>
     {
-        public EntityNotFoundException(string detail)
-            : base(ProblemTypeTemplate, ProblemTitleTemplate, detail, HttpStatusCode.NotFound)
+        public EntityNotFoundException(string name ,string detail)
+            : base(GetProblemTypeTemplate(name), GetProblemTitleTemplate(name), detail, HttpStatusCode.NotFound)
         {
         }
 
@@ -18,8 +16,8 @@ namespace RegistrationSystem.Api.Helpers.Exceptions
         {
         }
 
-        private static string ProblemTypeTemplate => $"{typeof(TEntity).Name.Slugify()}-not-found";
+        private static string GetProblemTypeTemplate(string name) => $"{name.Slugify()}-not-found";
 
-        private static string ProblemTitleTemplate => $"{typeof(TEntity).Name} was not found.";
+        private static string GetProblemTitleTemplate(string name) => $"{name} was not found.";
     }
 }

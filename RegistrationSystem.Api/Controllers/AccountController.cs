@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using RegistrationSystem.Api.Data.Models;
+using RegistrationSystem.Api.Helpers;
 using RegistrationSystem.Api.Models;
 using RegistrationSystem.Api.Services;
 
@@ -18,6 +19,26 @@ namespace RegistrationSystem.Api.Controllers
         {
             this.signInManager = signInManager;
             this.userService = userService;
+        }
+
+        [Authorize]
+        [HttpGet("{id}")]
+        public async Task<ActionResult<UserDto>> GetUserByIdAsync(string id)
+        {
+            var dbUser = await this.userService.GetByIdAsyncAsync(new UserId(id));
+            if(dbUser == null || dbUser.Id.IsNullOrWhiteSpace())
+            {
+                return NotFound();
+            }
+
+            return this.userService.ToUserDto(dbUser);
+        }
+
+        [Authorize(Roles = UserService.AdminRole)]
+        [HttpGet]
+        public async Task<ActionResult<List<UserDto>>> ListAsync()
+        {
+            return await this.userService.ListAsync();
         }
 
         [HttpPost("Login")]
@@ -46,20 +67,20 @@ namespace RegistrationSystem.Api.Controllers
             return await this.userService.RegisterUserAsync(userRegistrationDto);
         }
 
-        [Authorize]
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserDto>> GetUserByIdAsync(string id)
+        [Authorize(Roles = UserService.AdminRole)]
+        [HttpPut("{id}/Approve")]
+        public async Task<IActionResult> ApproveUser(string id)
         {
-            var user = await this.userService.GetByIdAsync(new UserId(id));
-            return user.ToUserDto();
+            await this.userService.ApproveAsync(new UserId(id));
+            return Ok();
         }
 
         [Authorize(Roles = UserService.AdminRole)]
-        [HttpGet]
-        public async Task<ActionResult<List<UserDto>>> ListAsync()
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> RejectUser(string id)
         {
-            var users = await this.userService.ListAsync();
-            return users.Select(u => u.ToUserDto()).ToList();
+            await this.userService.RejectAsync(new UserId(id));
+            return Ok();
         }
     }
 }

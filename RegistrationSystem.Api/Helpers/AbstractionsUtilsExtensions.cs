@@ -46,21 +46,6 @@ namespace RegistrationSystem.Api.Helpers
             }
         }
 
-        public static bool IsNumericType(this object value)
-        {
-            return value is sbyte
-                    or byte
-                    or short
-                    or ushort
-                    or int
-                    or uint
-                    or long
-                    or ulong
-                    or float
-                    or double
-                    or decimal;
-        }
-
         public static T Get<T>(this SerializationInfo info, string key)
         {
             return (T)(info?.GetValue(key, typeof(T)) ?? throw new NullReferenceException($"{key} is not found in serialization info."));
@@ -79,11 +64,6 @@ namespace RegistrationSystem.Api.Helpers
         public static bool IsNullOrWhiteSpace(this string value)
         {
             return string.IsNullOrWhiteSpace(value);
-        }
-
-        public static bool IgnoreCaseEquals(this string value1, string value2)
-        {
-            return value1.Equals(value2, StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>

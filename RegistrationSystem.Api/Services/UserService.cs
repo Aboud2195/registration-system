@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using RegistrationSystem.Api.Data;
 using RegistrationSystem.Api.Data.Models;
 using RegistrationSystem.Api.Helpers.Exceptions;
 using RegistrationSystem.Api.Models;
@@ -15,11 +16,13 @@ namespace RegistrationSystem.Api.Services
 
         private readonly UserManager<DbUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
+        private readonly ApplicationDbContext context;
 
-        public UserService(UserManager<DbUser> userManager, RoleManager<IdentityRole> roleManager)
+        public UserService(UserManager<DbUser> userManager, RoleManager<IdentityRole> roleManager, ApplicationDbContext context)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
+            this.context = context;
         }
 
         public async Task<UserDto> RegisterUserAsync(UserRegistrationDto userRegistrationDto)
@@ -38,8 +41,7 @@ namespace RegistrationSystem.Api.Services
                 ThrowException(result);
             }
 
-            var createdUser = new User(newDbUser);
-            return createdUser.ToUserDto();
+            return this.ToUserDto(newDbUser);
         }
 
         private static void ThrowException(IdentityResult result)
@@ -48,22 +50,35 @@ namespace RegistrationSystem.Api.Services
             throw new HttpException<ProblemDetails>("identity-error", "An error occured while create the identity", string.Join(Environment.NewLine, errors), System.Net.HttpStatusCode.UnprocessableEntity);
         }
 
-        public async Task<User> GetByIdAsync(UserId id)
+        public async Task<DbUser> GetByIdAsyncAsync(UserId id)
         {
             var dbUser = await this.userManager.FindByIdAsync(id.Value);
             if (dbUser == null)
             {
-                throw new EntityNotFoundException<User>($"User with id={id.Value} do not exists.");
+                throw new EntityNotFoundException("User", $"User with id={id.Value} do not exists.");
             }
 
-            return new User(dbUser);
+            return dbUser;
         }
 
-        public async Task<List<User>> ListAsync()
+        public async Task<List<UserDto>> ListAsync()
         {
             var dbUsers = await this.userManager.Users.ToListAsync();
-            var rtn = dbUsers.Select(u => new User(u)).ToList();
+            var rtn = dbUsers.Select(u => this.ToUserDto(u)).ToList();
             return rtn;
+        }
+
+        public async Task ApproveAsync(UserId id)
+        {
+            var dbUser = await this.context.Users.SingleAsync(u => u.Id == id.Value);
+            dbUser.EmailConfirmed = true;
+            await this.context.SaveChangesAsync();
+        }
+
+        public async Task RejectAsync(UserId id)
+        {
+            var dbUser = await this.userManager.FindByIdAsync(id.Value);
+            await this.userManager.DeleteAsync(dbUser);
         }
 
         public async Task RegisterRolesIfDoesntExistsAsync()
@@ -103,6 +118,18 @@ namespace RegistrationSystem.Api.Services
             }
 
             await this.userManager.AddToRoleAsync(newDbUser, AdminRole);
+        }
+
+        public UserDto ToUserDto(DbUser dbUser)
+        {
+            return new UserDto
+            {
+                Id = dbUser.Id,
+                FirstName = dbUser.FirstName ?? string.Empty,
+                LastName = dbUser.LastName ?? string.Empty,
+                Email = dbUser.Email,
+                Confirmed = dbUser.EmailConfirmed,
+            };
         }
     }
 }

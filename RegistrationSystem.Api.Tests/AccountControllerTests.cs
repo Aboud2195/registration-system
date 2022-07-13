@@ -2,6 +2,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using RegistrationSystem.Api.Data;
+using RegistrationSystem.Api.Helpers;
 using RegistrationSystem.Api.Helpers.Exceptions;
 using RegistrationSystem.Api.Models;
 using RegistrationSystem.Api.Services;
@@ -166,13 +167,13 @@ namespace RegistrationSystem.Api.Tests
             var problemDetails = DeserializeResponseContent<ValidationProblemDetails>(response);
             problemDetails.Should().BeEquivalentTo(new ValidationProblemDetails
             {
-                Detail = "value is required.",
+                Detail = "Value is required.",
                 StatusCode = HttpStatusCode.UnprocessableEntity,
                 Title = "Password is invalid.",
                 Type = "password-value-object-invalid",
                 BrokenRules = new()
                 {
-                    new("Required", "value is required."),
+                    new("Required", "Value is required."),
                 },
             });
         }
@@ -319,13 +320,14 @@ namespace RegistrationSystem.Api.Tests
             var dbAdminUser = this.context.Users.Single(u => u.Email == UserService.AdminEmail);
 
             var userDto = DeserializeResponseContent<List<UserDto>>(response);
-            userDto.Should().BeEquivalentTo(new List<UserDto> { 
+            userDto.Should().BeEquivalentTo(new List<UserDto> {
                 new UserDto
                 {
                     Email = dbAdminUser.Email,
                     FirstName = dbAdminUser.FirstName!,
                     Id = dbAdminUser.Id,
                     LastName = dbAdminUser.LastName!,
+                    Confirmed = true,
                 },
                 createUserDto ,
             });
@@ -335,16 +337,10 @@ namespace RegistrationSystem.Api.Tests
         public async Task Login_NotActivated_ShouldRedirectToLoginPage()
         {
             // Arrange
-            var createUserDto = (await this.CreateUserRequest())!;
-            var restRequest = new RestRequest($"{Path}/Login") { Method = Method.Post, };
-            restRequest.AddJsonBody(new UserLoginDto
-            {
-                Email = FakeEmail,
-                Password = FakePassword,
-            });
+            await this.CreateUserRequest();
 
             // Act
-            var response = await this.restClient.ExecuteAsync(restRequest);
+            var response = await this.LoginAsUser();
 
             // Assert
             response.IsSuccessful.Should().BeFalse();
@@ -352,20 +348,55 @@ namespace RegistrationSystem.Api.Tests
         }
 
         [Fact]
-        public async Task Activate_IdExists_ShouldActivateUser()
+        public async Task Approve_IdExists_ShouldApproveUser()
         {
             // Arrange
+            await LoginAsAdmin();
             var createUserDto = (await this.CreateUserRequest())!;
-            var restRequest = new RestRequest($"{Path}/{createUserDto.Id}/Activate") { Method = Method.Put, };
 
             // Act
-            var response = await this.restClient.ExecuteAsync(restRequest);
+            var response = await this.ApproveUser(createUserDto.Id);
             var userDto = await this.GetUser(createUserDto.Id);
 
             // Assert
             response.IsSuccessful.Should().BeTrue();
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            userDto.IsActive.Should().BeTrue();
+            userDto!.Confirmed.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Login_Activated_ShouldReturnSuccess()
+        {
+            // Arrange
+            await LoginAsAdmin();
+            var createUserDto = (await this.CreateUserRequest())!;
+            await ApproveUser(createUserDto.Id);
+
+            // Act
+            var response = await this.LoginAsUser();
+
+            // Assert
+            response.IsSuccessful.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task RejectUser_IdExists_ShouldDeleteUser()
+        {
+            // Arrange
+            await LoginAsAdmin();
+            var createUserDto = (await this.CreateUserRequest())!;
+
+            var restRequest = new RestRequest($"{Path}/{createUserDto.Id}") { Method = Method.Delete, };
+
+            // Act
+            var response = await this.restClient.ExecuteAsync(restRequest);
+
+            // Assert
+            var userDto = await this.GetUser(createUserDto.Id);
+            response.IsSuccessful.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            userDto.Should().BeNull();
         }
 
         private async Task LoginAsAdmin()
@@ -403,14 +434,34 @@ namespace RegistrationSystem.Api.Tests
             return DeserializeResponseContent<UserDto>(response);
         }
 
-        private async Task<UserDto> GetUser(string id)
+        private async Task<UserDto?> GetUser(string id)
         {
             var restRequest = new RestRequest($"{Path}/{id}") { Method = Method.Get, };
             var response = await this.restClient.ExecuteAsync(restRequest);
-            response.IsSuccessful.Should().BeTrue();
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var userDto = DeserializeResponseContent<UserDto>(response)!;
+            if (!response.IsSuccessful)
+            {
+                return null;
+            }
+
+            var userDto = DeserializeResponseContent<UserDto>(response);
             return userDto;
+        }
+
+        private async Task<RestResponse> ApproveUser(string id)
+        {
+            var restRequest = new RestRequest($"{Path}/{id}/Approve") { Method = Method.Put, };
+            return await this.restClient.ExecuteAsync(restRequest);
+        }
+
+        private async Task<RestResponse> LoginAsUser()
+        {
+            var restRequest = new RestRequest($"{Path}/Login") { Method = Method.Post, };
+            restRequest.AddJsonBody(new UserLoginDto
+            {
+                Email = FakeEmail,
+                Password = FakePassword,
+            });
+            return await this.restClient.ExecuteAsync(restRequest);
         }
 
         private static T? DeserializeResponseContent<T>(RestResponse response)
