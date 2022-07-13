@@ -6,3 +6,6 @@
 <br>
 <br>
 <button mat-raised-button (click)="logout()">Logout (remove token from localstorage)</button>
+<br>
+<br>
+<app-registrations *ngIf="isAdmin"></app-registrations>

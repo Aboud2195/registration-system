@@ -31,7 +31,7 @@ namespace RegistrationSystem.Api.Controllers
                 return NotFound();
             }
 
-            return this.userService.ToUserDto(dbUser);
+            return await this.userService.ToUserDtoAsync(dbUser);
         }
 
         [Authorize(Roles = UserService.AdminRole)]
@@ -39,6 +39,13 @@ namespace RegistrationSystem.Api.Controllers
         public async Task<ActionResult<List<UserDto>>> ListAsync()
         {
             return await this.userService.ListAsync();
+        }
+
+        [Authorize(Roles = UserService.AdminRole)]
+        [HttpGet("Pending")]
+        public async Task<ActionResult<List<UserDto>>> ListPendingAsync()
+        {
+            return await this.userService.ListPendingAsync();
         }
 
         [HttpPost("Login")]
@@ -54,7 +61,7 @@ namespace RegistrationSystem.Api.Controllers
         }
 
         [Authorize]
-        [HttpPost("Logout")]
+        [HttpGet("Logout")]
         public async Task<ActionResult<UserDto>> Logout()
         {
             await this.signInManager.SignOutAsync();

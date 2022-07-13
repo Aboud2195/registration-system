@@ -224,6 +224,7 @@ namespace RegistrationSystem.Api.Tests
                 Email = FakeEmail,
                 FirstName = "first",
                 LastName = "last",
+                Role = UserService.SubscriberRole,
             }, opt => opt.Excluding(m => m.Id));
             userDto!.Id.Should().NotBeNullOrWhiteSpace();
 
@@ -328,6 +329,7 @@ namespace RegistrationSystem.Api.Tests
                     Id = dbAdminUser.Id,
                     LastName = dbAdminUser.LastName!,
                     Confirmed = true,
+                    Role = UserService.AdminRole,
                 },
                 createUserDto ,
             });

@@ -41,7 +41,7 @@ namespace RegistrationSystem.Api.Services
                 ThrowException(result);
             }
 
-            return this.ToUserDto(newDbUser);
+            return await this.ToUserDtoAsync(newDbUser);
         }
 
         private static void ThrowException(IdentityResult result)
@@ -58,7 +58,7 @@ namespace RegistrationSystem.Api.Services
                 throw new EntityNotFoundException("User", $"User with email={email.Value} do not exists.");
             }
 
-            return this.ToUserDto(dbUser);
+            return await this.ToUserDtoAsync(dbUser);
         }
 
         public async Task<DbUser> GetByIdAsyncAsync(UserId id)
@@ -75,7 +75,24 @@ namespace RegistrationSystem.Api.Services
         public async Task<List<UserDto>> ListAsync()
         {
             var dbUsers = await this.userManager.Users.ToListAsync();
-            var rtn = dbUsers.Select(u => this.ToUserDto(u)).ToList();
+            var rtn = new List<UserDto>();
+            foreach (var dbUser in dbUsers)
+            {
+                rtn.Add(await this.ToUserDtoAsync(dbUser));
+            }
+
+            return rtn;
+        }
+
+        public async Task<List<UserDto>> ListPendingAsync()
+        {
+            var dbUsers = await this.userManager.Users.Where(u => !u.EmailConfirmed).ToListAsync();
+            var rtn = new List<UserDto>();
+            foreach (var dbUser in dbUsers)
+            {
+                rtn.Add(await this.ToUserDtoAsync(dbUser));
+            }
+
             return rtn;
         }
 
@@ -131,8 +148,10 @@ namespace RegistrationSystem.Api.Services
             await this.userManager.AddToRoleAsync(newDbUser, AdminRole);
         }
 
-        public UserDto ToUserDto(DbUser dbUser)
+        public async Task<UserDto> ToUserDtoAsync(DbUser dbUser)
         {
+            var dbUserRole = await this.context.UserRoles.SingleAsync(r => r.UserId == dbUser.Id);
+            var dbSubcriberRole = await this.context.Roles.SingleAsync(r => r.Id == dbUserRole.RoleId);
             return new UserDto
             {
                 Id = dbUser.Id,
@@ -140,6 +159,7 @@ namespace RegistrationSystem.Api.Services
                 LastName = dbUser.LastName ?? string.Empty,
                 Email = dbUser.Email,
                 Confirmed = dbUser.EmailConfirmed,
+                Role = dbSubcriberRole.Name,
             };
         }
     }

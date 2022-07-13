@@ -7,5 +7,6 @@
         public string LastName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public bool Confirmed { get; set; }
+        public string Role { get;set; } = string.Empty;
     }
 }
