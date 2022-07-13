@@ -13,9 +13,7 @@ import { RegistrationsComponent } from './registrations/registrations.component'
   ],
   imports: [
     CommonModule,
-    // Import our Routes for this module
     ProtectedRoutingModule,
-    // Angular Material Imports
     MatButtonModule,
     MatTableModule,
   ]

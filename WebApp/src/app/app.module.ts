@@ -5,12 +5,11 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 
 import { UserDto } from './public/interfaces';
 
-// specify the key where the token is stored in the local storage
 export const LOCALSTORAGE_USER_KEY = 'user';
 
 export function userGetter(): UserDto | null {
@@ -24,8 +23,11 @@ export function userGetter(): UserDto | null {
     return null;
   }
   
-  console.log(user);
   return user;
+}
+
+export function showError(snackbar: MatSnackBar, message: string) {
+  snackbar.open(message, 'Close', { panelClass: ['error-snackbar'] })
 }
 
 @NgModule({
@@ -36,9 +38,7 @@ export function userGetter(): UserDto | null {
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    // Import our Routes for this module
     AppRoutingModule,
-    // Angular Material Imports
     MatSnackBarModule,
     MatTableModule
   ],

@@ -12,12 +12,12 @@
 
         public string Value => this.value;
 
-        protected override List<ValueObjectRule> GetBrokenRules()
+        protected override List<BusinessRule> GetBrokenRules()
         {
-            List<ValueObjectRule> rules = new();
+            List<BusinessRule> rules = new();
             if (this.Value.IsNullOrWhiteSpace())
             {
-                rules.Add(new ValueObjectRule(ValueObjectRuleType.Required, $"Value is required."));
+                rules.Add(new BusinessRule("Required", $"Value is required."));
             }
 
             return rules;

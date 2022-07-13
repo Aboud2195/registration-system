@@ -1,4 +1,4 @@
-import { LOCALSTORAGE_USER_KEY, userGetter } from './../../../app.module';
+import { LOCALSTORAGE_USER_KEY, userGetter, showError } from './../../../app.module';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of, tap } from 'rxjs';
@@ -17,7 +17,8 @@ export class AuthService {
 
   login(loginRequest: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>('/api/Account/Login', loginRequest).pipe(
-      tap((res: LoginResponse) => localStorage.setItem(LOCALSTORAGE_USER_KEY, JSON.stringify(res))),
+      tap((res: LoginResponse) => localStorage.setItem(LOCALSTORAGE_USER_KEY, JSON.stringify(res)),
+        (error: any) => { showError(this.snackbar, 'Login Failed: Your user ID or password is incorrect') }),
       tap(() => this.snackbar.open('Login Successfull', 'Close', {
         duration: 2000, horizontalPosition: 'right', verticalPosition: 'top'
       }))
@@ -28,7 +29,7 @@ export class AuthService {
     return this.http.post<RegisterResponse>('/api/Account', registerRequest).pipe(
       tap((res: RegisterResponse) => this.snackbar.open(`User created successfully`, 'Close', {
         duration: 2000, horizontalPosition: 'right', verticalPosition: 'top'
-      }))
+      }), (error: any) => { showError(this.snackbar, error.error.detail) })
     );
   }
 

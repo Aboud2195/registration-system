@@ -12,18 +12,14 @@ import { MatIconModule } from '@angular/material/icon';
 
 @NgModule({
   declarations: [
-    // Own Components
     LoginComponent,
     RegisterComponent
   ],
   imports: [
     CommonModule,
-    // Import our Routes for this module
     PublicRoutingModule,
-    // Angular Forms Imports
     ReactiveFormsModule,
     FormsModule,
-    // Angular Material Imports
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,

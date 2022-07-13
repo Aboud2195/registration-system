@@ -1,8 +1,12 @@
 ﻿using RegistrationSystem.Api.Data.Models;
+using RegistrationSystem.Api.Helpers.Domain;
 using RegistrationSystem.Api.Helpers.Exceptions;
 
 namespace RegistrationSystem.Api.Models
 {
+    /// <summary>
+    /// Class resposible of validating a new user's data using value objects and creating the db model.
+    /// </summary>
     public class NewUser
     {
         private readonly UserEmail email;
@@ -10,7 +14,6 @@ namespace RegistrationSystem.Api.Models
         private readonly Name lastName;
         private readonly Password password;
         private readonly Password confirmPassword;
-
 
         public NewUser(UserEmail email, Name firstName, Name lastName, Password password, Password confirmPassword)
         {
@@ -21,7 +24,7 @@ namespace RegistrationSystem.Api.Models
             this.confirmPassword = confirmPassword;
             if (this.confirmPassword != this.password)
             {
-                throw new HttpException<ProblemDetails>("passwords-dont-match", "The password and confirmation password do not match.", $"The password {this.password.Value} and the confirmation password {this.confirmPassword.Value} do not match.", System.Net.HttpStatusCode.UnprocessableEntity);
+                throw new InvalidEntityException("User", new List<BusinessRule> { new("PassowrdsDontMatch", $"The password {this.password.Value} and the confirmation password {this.confirmPassword.Value} do not match.") });
             }
         }
 

@@ -1,9 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Diagnostics;
 using RegistrationSystem.Api.Helpers.Exceptions;
-using NLog;
 using NLog.Extensions.Logging;
 
 namespace RegistrationSystem.Api.Helpers

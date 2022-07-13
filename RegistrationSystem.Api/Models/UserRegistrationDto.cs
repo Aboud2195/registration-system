@@ -1,5 +1,8 @@
 ﻿namespace RegistrationSystem.Api.Models
 {
+    /// <summary>
+    /// Data transfer object for user registration request.
+    /// </summary>
     public class UserRegistrationDto
     {
         public string FirstName { get; set; } = string.Empty;

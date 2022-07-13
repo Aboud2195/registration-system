@@ -207,8 +207,8 @@ namespace RegistrationSystem.Api.Tests
             {
                 Detail = "The password password and the confirmation password confirmPassword do not match.",
                 StatusCode = HttpStatusCode.UnprocessableEntity,
-                Title = "The password and confirmation password do not match.",
-                Type = "passwords-dont-match",
+                Title = "User is invalid.",
+                Type = "user-entity-invalid",
             });
         }
 
@@ -331,6 +331,31 @@ namespace RegistrationSystem.Api.Tests
                     Confirmed = true,
                     Role = UserService.AdminRole,
                 },
+                createUserDto ,
+            });
+        }
+
+        [Fact]
+        public async Task ListPendingUsers_LoggedIn_ShouldReturnTheUserDtoList()
+        {
+            // Arrange
+            await LoginAsAdmin();
+
+            var createUserDto = (await this.CreateUserRequest())!;
+
+            var restRequest = new RestRequest($"{Path}/Pending") { Method = Method.Get, };
+
+            // Act
+            var response = await this.restClient.ExecuteAsync(restRequest);
+
+            // Assert
+            response.IsSuccessful.Should().BeTrue();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var dbAdminUser = this.context.Users.Single(u => u.Email == UserService.AdminEmail);
+
+            var userDto = DeserializeResponseContent<List<UserDto>>(response);
+            userDto.Should().BeEquivalentTo(new List<UserDto> {
                 createUserDto ,
             });
         }

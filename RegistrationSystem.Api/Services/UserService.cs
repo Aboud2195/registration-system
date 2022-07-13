@@ -25,6 +25,11 @@ namespace RegistrationSystem.Api.Services
             this.context = context;
         }
 
+        /// <summary>
+        /// Register new user.
+        /// </summary>
+        /// <param name="userRegistrationDto">New user info.</param>
+        /// <returns>The regitered user data.</returns>
         public async Task<UserDto> RegisterUserAsync(UserRegistrationDto userRegistrationDto)
         {
             var newUser = new NewUser(userRegistrationDto);
@@ -47,9 +52,15 @@ namespace RegistrationSystem.Api.Services
         private static void ThrowException(IdentityResult result)
         {
             var errors = result.Errors.Select(e => e.Description);
-            throw new HttpException<ProblemDetails>("identity-error", "An error occured while create the identity", string.Join(Environment.NewLine, errors), System.Net.HttpStatusCode.UnprocessableEntity);
+            throw new HttpException<ProblemDetails>("identity-error", "An error occured while create the identity", string.Join(Environment.NewLine, errors), System.Net.HttpStatusCode.BadRequest);
         }
 
+        /// <summary>
+        /// Get user data by email.
+        /// </summary>
+        /// <param name="email">The email of the user to find.</param>
+        /// <exception cref="HttpException{ProblemDetails}">This exception is thrown if the user was not found.</exception>
+        /// <returns>The user data if found.</returns>
         public async Task<UserDto> GetUserByEmailAsync(UserEmail email)
         {
             var dbUser = await this.userManager.FindByEmailAsync(email.Value);
@@ -61,6 +72,12 @@ namespace RegistrationSystem.Api.Services
             return await this.ToUserDtoAsync(dbUser);
         }
 
+        /// <summary>
+        /// Get user data by id.
+        /// </summary>
+        /// <param name="id">The id of the user to find.</param>
+        /// <exception cref="HttpException{ProblemDetails}">This exception is thrown if the user was not found.</exception>
+        /// <returns>The user data if found.</returns>
         public async Task<DbUser> GetByIdAsyncAsync(UserId id)
         {
             var dbUser = await this.userManager.FindByIdAsync(id.Value);
@@ -72,6 +89,10 @@ namespace RegistrationSystem.Api.Services
             return dbUser;
         }
 
+        /// <summary>
+        /// Get all the users.
+        /// </summary>
+        /// <returns>List of all the users.</returns>
         public async Task<List<UserDto>> ListAsync()
         {
             var dbUsers = await this.userManager.Users.ToListAsync();
@@ -84,6 +105,10 @@ namespace RegistrationSystem.Api.Services
             return rtn;
         }
 
+        /// <summary>
+        /// Get all the users pending approval.
+        /// </summary>
+        /// <returns>List of all the pending users.</returns>
         public async Task<List<UserDto>> ListPendingAsync()
         {
             var dbUsers = await this.userManager.Users.Where(u => !u.EmailConfirmed).ToListAsync();
@@ -96,6 +121,10 @@ namespace RegistrationSystem.Api.Services
             return rtn;
         }
 
+        /// <summary>
+        /// Approve a user.
+        /// </summary>
+        /// <param name="id">The id of the user to approve.</param>
         public async Task ApproveAsync(UserId id)
         {
             var dbUser = await this.context.Users.SingleAsync(u => u.Id == id.Value);
@@ -103,13 +132,36 @@ namespace RegistrationSystem.Api.Services
             await this.context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Reject and delete a user.
+        /// </summary>
+        /// <param name="id">The id of the user to reject.</param>
         public async Task RejectAsync(UserId id)
         {
             var dbUser = await this.userManager.FindByIdAsync(id.Value);
             await this.userManager.DeleteAsync(dbUser);
         }
 
-        public async Task RegisterRolesIfDoesntExistsAsync()
+        /// <summary>
+        /// Convert db model to data transfer object.
+        /// </summary>
+        /// <param name="id">The id of the user to approve.</param>
+        public async Task<UserDto> ToUserDtoAsync(DbUser dbUser)
+        {
+            var dbUserRole = await this.context.UserRoles.SingleAsync(r => r.UserId == dbUser.Id);
+            var dbSubcriberRole = await this.context.Roles.SingleAsync(r => r.Id == dbUserRole.RoleId);
+            return new UserDto
+            {
+                Id = dbUser.Id,
+                FirstName = dbUser.FirstName ?? string.Empty,
+                LastName = dbUser.LastName ?? string.Empty,
+                Email = dbUser.Email,
+                Confirmed = dbUser.EmailConfirmed,
+                Role = dbSubcriberRole.Name,
+            };
+        }
+
+        internal async Task RegisterRolesIfDoesntExistsAsync()
         {
             if (await this.roleManager.Roles.AnyAsync())
             {
@@ -120,7 +172,7 @@ namespace RegistrationSystem.Api.Services
             await this.roleManager.CreateAsync(new IdentityRole(SubscriberRole));
         }
 
-        public async Task RegisterAdminIfDoesntExistsAsync()
+        internal async Task RegisterAdminIfDoesntExistsAsync()
         {
             var admins = await this.userManager.GetUsersInRoleAsync(AdminRole);
             if (admins.Any())
@@ -139,6 +191,7 @@ namespace RegistrationSystem.Api.Services
 
             var newDbUser = newUser.CreateDbUser();
             newDbUser.EmailConfirmed = true;
+
             var result = await this.userManager.CreateAsync(newDbUser, AdminPassword);
             if (!result.Succeeded)
             {
@@ -146,21 +199,6 @@ namespace RegistrationSystem.Api.Services
             }
 
             await this.userManager.AddToRoleAsync(newDbUser, AdminRole);
-        }
-
-        public async Task<UserDto> ToUserDtoAsync(DbUser dbUser)
-        {
-            var dbUserRole = await this.context.UserRoles.SingleAsync(r => r.UserId == dbUser.Id);
-            var dbSubcriberRole = await this.context.Roles.SingleAsync(r => r.Id == dbUserRole.RoleId);
-            return new UserDto
-            {
-                Id = dbUser.Id,
-                FirstName = dbUser.FirstName ?? string.Empty,
-                LastName = dbUser.LastName ?? string.Empty,
-                Email = dbUser.Email,
-                Confirmed = dbUser.EmailConfirmed,
-                Role = dbSubcriberRole.Name,
-            };
         }
     }
 }

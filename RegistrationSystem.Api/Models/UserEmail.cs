@@ -10,13 +10,13 @@ namespace RegistrationSystem.Api.Models
         {
         }
 
-        protected override List<ValueObjectRule> GetBrokenRules()
+        protected override List<BusinessRule> GetBrokenRules()
         {
             var rtn = base.GetBrokenRules();
             string regex = @"^[a-zA-Z0-9.! #$%&'*+/=? ^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$";
             if (!Regex.IsMatch(this.Value, regex))
             {
-                rtn.Add(new ValueObjectRule(ValueObjectRuleType.ValidAsEmail, $"Value should be a valid email."));
+                rtn.Add(new BusinessRule("ValidAsEmail", $"Value should be a valid email."));
             }
 
             return rtn;

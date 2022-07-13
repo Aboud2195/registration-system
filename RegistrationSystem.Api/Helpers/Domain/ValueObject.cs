@@ -2,7 +2,10 @@
 
 namespace RegistrationSystem.Api.Helpers.Domain
 {
-    public abstract class ValueObject : Validatable<ValueObjectRule>, IValueObject
+    /// <summary>
+    /// Abstract value object implementation.
+    /// </summary>
+    public abstract class ValueObject
     {
         public static bool EqualOperator<TVo>(TVo valueObject1, TVo valueObject2)
             where TVo : ValueObject
@@ -43,11 +46,17 @@ namespace RegistrationSystem.Api.Helpers.Domain
             return this.GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
         }
 
-        protected override InvalidValidatableException<ValueObjectRule> GetException(IEnumerable<ValueObjectRule> brokenRules)
-        {
-            return new InvalidValueObjectException(this.GetType(), brokenRules);
-        }
-
         protected abstract IEnumerable<object> GetEqualityComponents();
+
+        protected abstract List<BusinessRule> GetBrokenRules();
+
+        public void ThrowExceptionIfInvalid()
+        {
+            var brokenRules = this.GetBrokenRules();
+            if (brokenRules.Count > 0)
+            {
+                throw new InvalidValueObjectException(this.GetType(), brokenRules);
+            }
+        }
     }
 }

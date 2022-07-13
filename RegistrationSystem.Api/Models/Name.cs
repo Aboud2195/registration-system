@@ -13,9 +13,9 @@ namespace RegistrationSystem.Api.Models
 
         public string Value => this.value;
 
-        protected override List<ValueObjectRule> GetBrokenRules()
+        protected override List<BusinessRule> GetBrokenRules()
         {
-            var rtn = new List<ValueObjectRule>();
+            var rtn = new List<BusinessRule>();
             return rtn;
         }
 
